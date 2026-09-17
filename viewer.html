@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shared Location</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f2f5f8;
+      text-align: center;
+    }
+
+    .box {
+      max-width: 430px;
+      margin: 40px auto;
+      padding: 25px;
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 5px 20px rgba(0,0,0,.1);
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border: 0;
+      border-radius: 10px;
+      background: #1976d2;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    #result {
+      margin-top: 20px;
+      line-height: 1.8;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+
+  <h1>📍 Shared Location</h1>
+
+  <p id="status">সর্বশেষ লোকেশন দেখতে নিচের বাটনে চাপুন।</p>
+
+  <button id="loadBtn">
+    📍 সর্বশেষ লোকেশন দেখুন
+  </button>
+
+  <div id="result"></div>
+
+  <a id="mapLink"
+     target="_blank"
+     style="display:none;">
+     🗺️ Google Maps-এ দেখুন
+  </a>
+
+</div>
+
+<script>
+
+const databaseURL =
+  "https://rk420-ccbb8-default-rtdb.firebaseio.com/locations.json";
+
+const button = document.getElementById("loadBtn");
+const status = document.getElementById("status");
+const result = document.getElementById("result");
+const mapLink = document.getElementById("mapLink");
+
+button.addEventListener("click", function () {
+
+  status.innerText = "📡 Firebase থেকে লোকেশন নেওয়া হচ্ছে...";
+
+  fetch(databaseURL)
+    .then(function(response) {
+
+      if (!response.ok) {
+        throw new Error("Firebase request failed");
+      }
+
+      return response.json();
+
+    })
+    .then(function(data) {
+
+      if (!data) {
+        status.innerText = "❌ কোনো লোকেশন পাওয়া যায়নি।";
+        return;
+      }
+
+      const keys = Object.keys(data);
+
+      if (keys.length === 0) {
+        status.innerText = "❌ কোনো লোকেশন পাওয়া যায়নি।";
+        return;
+      }
+
+      const latestKey = keys[keys.length - 1];
+      const location = data[latestKey];
+
+      const latitude = location.latitude;
+      const longitude = location.longitude;
+
+      status.innerText = "✅ সর্বশেষ লোকেশন পাওয়া গেছে!";
+
+      result.innerHTML =
+        "Latitude: " + latitude +
+        "<br>Longitude: " + longitude;
+
+      mapLink.href =
+        "https://www.google.com/maps?q=" +
+        latitude + "," + longitude;
+
+      mapLink.style.display = "inline-block";
+
+    })
+    .catch(function(error) {
+
+      status.innerText =
+        "❌ লোকেশন পাওয়া যায়নি।";
+
+      console.log(error);
+
+    });
+
+});
+
+</script>
+
+</body>
+  </html>
