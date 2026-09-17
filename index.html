@@ -1,1 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <title>Location Share</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f2f5f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .box {
+      width: 100%;
+      max-width: 430px;
+      background: white;
+      padding: 30px 24px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0,0,0,.10);
+    }
+
+    .icon {
+      font-size: 55px;
+    }
+
+    h1 {
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #666;
+      line-height: 1.6;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border: 0;
+      border-radius: 12px;
+      background: #1976d2;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    #result {
+      margin-top: 15px;
+      line-height: 1.8;
+    }
+
+    #mapLink {
+      display: inline-block;
+      margin-top: 15px;
+    }
+
+    .privacy {
+      margin-top: 25px;
+      font-size: 13px;
+      color: #888;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="box">
+
+    <div class="icon">📍</div>
+
+    <h1>লোকেশন শেয়ার</h1>
+
+    <p class="subtitle">
+      আপনার বর্তমান লোকেশন শেয়ার করতে নিচের বাটনে চাপুন।
+    </p>
+
+    <button id="locationBtn">
+      📍 আমার লোকেশন শেয়ার করুন
+    </button>
+
+    <p id="status"></p>
+
+    <div id="result"></div>
+
+    <a id="mapLink" target="_blank"></a>
+
+    <p class="privacy">
+      🔒 আপনার অনুমতি ছাড়া কোনো লোকেশন নেওয়া হবে না।
+    </p>
+
+  </div>
+
+  <script>
+
+    const button = document.getElementById("locationBtn");
+    const status = document.getElementById("status");
+    const result = document.getElementById("result");
+    const mapLink = document.getElementById("mapLink");
+
+    const databaseURL =
+      "https://rk420-ccbb8-default-rtdb.firebaseio.com/locations.json";
+
+    button.addEventListener("click", function () {
+
+      status.innerText = "📍 আপনার লোকেশন নেওয়া হচ্ছে...";
+
+      if (!navigator.geolocation) {
+        status.innerText =
+          "❌ এই ব্রাউজারে Location সুবিধা নেই।";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+
+        function (position) {
+
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+
+          status.innerText =
+            "📤 লোকেশন শেয়ার করা হচ্ছে...";
+
+          result.innerHTML =
+            "Latitude: " + latitude +
+            "<br>Longitude: " + longitude;
+
+          mapLink.href =
+            "https://www.google.com/maps?q=" +
+            latitude + "," + longitude;
+
+          mapLink.innerText =
+            "🗺️ Google Maps-এ লোকেশন দেখুন";
+
+          fetch(databaseURL, {
+
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+
+              latitude: latitude,
+              longitude: longitude,
+              timestamp: Date.now()
+
+            })
+
+          })
+
+          .then(function(response) {
+
+            if (!response.ok) {
+              throw new Error("Firebase request failed");
+            }
+
+            return response.json();
+
+          })
+
+          .then(function(data) {
+
+            status.innerText =
+              "✅ আপনার লোকেশন সফলভাবে শেয়ার হয়েছে!";
+
+            console.log("Firebase ID:", data.name);
+
+          })
+
+          .catch(function(error) {
+
+            status.innerText =
+              "❌ লোকেশন শেয়ার করা যায়নি।";
+
+            console.log(error);
+
+          });
+
+        },
+
+        function (error) {
+
+          status.innerText =
+            "❌ Location Permission দেওয়া হয়নি অথবা Location পাওয়া যায়নি।";
+
+          console.log(error);
+
+        },
+
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
+        }
+
+      );
+
+    });
+
+  </script>
+
+</body>
+  </html>
